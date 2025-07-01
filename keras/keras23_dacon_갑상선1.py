@@ -35,7 +35,7 @@ def f1_score(y_true, y_pred):
     recall = recall(y_true, y_pred)
     return 2*((precision*recall)/(precision+recall+K.epsilon()))
 
-def custom_f1_score(threshold=0.5):
+def custom_f1_score(threshold=0.4):
     """라운딩 제거 + 커스텀 임계값 적용 F1-Score 함수"""
     def f1(y_true, y_pred):
         # 1. 임계값 기반 이진화 (라운딩 제거)
@@ -126,7 +126,7 @@ print(y.shape)  # (87159,)
 
 x_train, x_test, y_train, y_test = train_test_split(
     x,y,
-    test_size=0.25,
+    test_size=0.1,
     random_state=517,
     shuffle=True,
 )
@@ -192,14 +192,13 @@ class_weight_dict = {0: class_weights[0], 1: class_weights[1]}
 print(f"Class weights: {class_weight_dict}")
 
 # 모델구성
-from tensorflow.keras.layers import Dropout
+from tensorflow.keras.layers import Dropout, BatchNormalization
 model = Sequential()
-model.add(Dense(50, input_dim=14, activation='relu'))
-model.add(Dropout(0.3))  # 추가
-model.add(Dense(25, activation='relu'))
-model.add(Dropout(0.3))  # 추가
-model.add(Dense(12, activation='relu'))
+model.add(Dense(128, input_dim=14, activation='relu'))
+model.add(BatchNormalization())
 model.add(Dropout(0.2))  # 추가
+model.add(Dense(64, activation='relu'))
+model.add(Dense(32, activation='relu'))
 model.add(Dense(1, activation='sigmoid'))
 
 ## ModelCheckpoint 저장 모델 불러오기
@@ -215,9 +214,9 @@ model.compile(loss='binary_crossentropy',
               ) 
 
 es = EarlyStopping( 
-    monitor = 'val_f1',            
+    monitor = 'f1',            
     mode = 'max',               
-    patience=115,             
+    patience=30,             
     restore_best_weights=True,  
 )
 # path_mcp = './_save/dacon/갑상선/'
@@ -228,87 +227,88 @@ es = EarlyStopping(
 #     filepath = path_mcp + 'keras23_dacon_갑상선_mcp.hdf5',  # 또는 .h5
 # )
 
-for i in range(1, 21):
-    start_time = time.time()
-    hist = model.fit(x_train, y_train, 
-                    epochs=1000, 
-                    batch_size=128,
-                    verbose=3, 
-                    class_weight=class_weight_dict,  # 클래스 가중치 적용
-                    validation_split=0.25,
-                    callbacks=[es],
-                    )
-    end_time = time.time()
 
-    # print("=============== hist =================")
-    # print(hist)
-    # print("=============== hist.history =================")
-    # print(hist.history) # loss, val_loss, acc, val_acc
-    # print("=============== loss =================")
-    # print(hist.history['loss'])
-    # print("=============== val_loss =================")
-    # print(hist.history['val_loss'])
+start_time = time.time()
+hist = model.fit(x_train, y_train, 
+                epochs=200, 
+                batch_size=32,
+                verbose=1, 
+                class_weight=class_weight_dict,  # 클래스 가중치 적용
+                validation_split=2/9,
+                callbacks=[es],
+                )
+end_time = time.time()
 
-    ## 그래프 그리기
-    plt.figure(figsize=(18, 5))
-    # 첫 번째 그래프
-    plt.subplot(1, 2, 1)  # (행, 열, 위치)
-    plt.plot(hist.history['loss'], c='red', label='loss')
-    plt.plot(hist.history['val_loss'], c='blue', label='val_loss')
-    plt.title('Loss')
-    plt.xlabel('epochs')
-    plt.ylabel('loss')
-    plt.legend()
-    plt.grid()
+# print("=============== hist =================")
+# print(hist)
+# print("=============== hist.history =================")
+# print(hist.history) # loss, val_loss, acc, val_acc
+# print("=============== loss =================")
+# print(hist.history['loss'])
+# print("=============== val_loss =================")
+# print(hist.history['val_loss'])
 
-    # # 두 번째 그래프
-    # plt.subplot(1, 2, 2)
-    # plt.plot(hist.history['acc'], c='green', label='acc')
-    # plt.plot(hist.history['val_acc'], c='orange', label='val_acc')
-    # plt.title('acc')
-    # plt.xlabel('epochs')
-    # plt.ylabel('accuracy')
-    # plt.legend()
-    # plt.grid()
+## 그래프 그리기
+plt.figure(figsize=(18, 5))
+# 첫 번째 그래프
+plt.subplot(1, 2, 1)  # (행, 열, 위치)
+plt.plot(hist.history['loss'], c='red', label='loss')
+plt.plot(hist.history['val_loss'], c='blue', label='val_loss')
+plt.title('Loss')
+plt.xlabel('epochs')
+plt.ylabel('loss')
+plt.legend()
+plt.grid()
 
-    # 세번째 그래프
-    plt.subplot(1, 2, 2)
-    plt.plot(hist.history['f1_score'], c='green', label='f1_score')
-    plt.plot(hist.history['val_f1_score'], c='yellow', label='val_f1_score')
-    plt.title('f1_score')
-    plt.xlabel('epochs')
-    plt.ylabel('accuracy')
-    plt.legend()
-    plt.grid()
+# # 두 번째 그래프
+# plt.subplot(1, 2, 2)
+# plt.plot(hist.history['acc'], c='green', label='acc')
+# plt.plot(hist.history['val_acc'], c='orange', label='val_acc')
+# plt.title('acc')
+# plt.xlabel('epochs')
+# plt.ylabel('accuracy')
+# plt.legend()
+# plt.grid()
 
-    plt.tight_layout()  # 간격 자동 조정
+# 세번째 그래프
+plt.subplot(1, 2, 2)
+plt.plot(hist.history['f1_score'], c='green', label='f1_score')
+plt.plot(hist.history['val_f1_score'], c='yellow', label='val_f1_score')
+plt.title('f1_score')
+plt.xlabel('epochs')
+plt.ylabel('accuracy')
+plt.legend()
+plt.grid()
 
-    #plt.show()  # 윈도우띄워주고 작동을 정지시킨다. 다음단계 계속 수행하려면 뒤로빼던지
+plt.tight_layout()  # 간격 자동 조정
 
-    # 4. 평가, 예측
-    results = model.evaluate(x_test, y_test)
-    print(results)
-    print("loss : ", results[0]) 
-    print("f1_score : ", results[1])  
+#plt.show()  # 윈도우띄워주고 작동을 정지시킨다. 다음단계 계속 수행하려면 뒤로빼던지
 
-    # 검증 데이터로 F1-Score 계산
-    from sklearn.metrics import f1_score
-    y_pred = model.predict(x_test)
-    print(y_pred.shape) # (17432, 1)
-    y_pred = (y_pred > 0.5).astype(int)
-    f1 = f1_score(y_test, y_pred)
-    print("F1-Score : ", f1)
+# 4. 평가, 예측
+results = model.evaluate(x_test, y_test)
+print(results)
+print("loss : ", results[0]) 
+print("f1_score : ", results[1])  
 
-    ##### csv 파일 만들기 #####
-    y_submit = model.predict(test_csv)
-    y_submit = (y_submit > 0.5).astype(int)
-    submission_csv['Cancer'] = y_submit
-    from datetime import datetime
-    current_time = datetime.now().strftime('%y%m%d%H%M%S')
-    submission_csv.to_csv(f'{path}submission_{current_time}.csv', index=False)  # 인덱스 생성옵션 끄면 첫번째 컬럼이 인덱스로 지정됨.(안끄면 인덱스 자동생성)
+# 검증 데이터로 F1-Score 계산
+from sklearn.metrics import f1_score
+y_pred = model.predict(x_test)
+print(y_pred.shape) # (17432, 1)
+y_pred = (y_pred > 0.4).astype(int)
+print(y_pred)
+f1 = f1_score(y_test, y_pred)
+print("F1-Score : ", f1)
 
-    # 모델 저장
-    path_h5 = './_save/dacon/'
-    model.save(path_h5 + '갑상선/'+ str(f1) + f'_{current_time}.h5')  # 학습가중치 저장
+##### csv 파일 만들기 #####
+y_submit = model.predict(test_csv)
+y_submit = (y_submit > 0.5).astype(int)
+submission_csv['Cancer'] = y_submit
+from datetime import datetime
+current_time = datetime.now().strftime('%y%m%d%H%M%S')
+submission_csv.to_csv(f'{path}submission_{current_time}.csv', index=False)  # 인덱스 생성옵션 끄면 첫번째 컬럼이 인덱스로 지정됨.(안끄면 인덱스 자동생성)
 
-    #plt.show()
+# 모델 저장
+path_h5 = './_save/dacon/'
+model.save(path_h5 + '갑상선/'+ str(f1) + f'_{current_time}.h5')  # 학습가중치 저장
+
+plt.show()

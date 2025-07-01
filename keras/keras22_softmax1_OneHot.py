@@ -71,7 +71,7 @@ y1 = ohe.fit_transform(y1)
 print("Sklearn OneHotEncoder:")
 print(y1)
 print(y1.shape)      # (150, 3)
-print(type(y1))      # <class 'scipy.sparse.csr.csr_matrix'>
+print(type(y1))      # scipy.sparse.csr.csr_matrix -> numpy.ndarray
 y = y1
 """
 # 2. pd
@@ -149,14 +149,19 @@ print('(categorical)acc :', results[1])  # 0.9333333373069763
 y_pred = model.predict(x_test)
 print(y_pred)
 # [[1.4071658e-07 1.4876697e-04 9.9985111e-01]
-# ...
+#  [9.9997270e-01 2.7230915e-05 1.0799404e-07]
+#   ...
+#  [5.7996834e-09 1.6101172e-04 9.9983895e-01]
 #  [4.0454499e-04 9.9942160e-01 1.7384252e-04]]
 
 # argmax이용하여 최대값있는 인덱스만 벡터(시리즈)로 반환후 얼마나 일치하는지 계산
 y_pred = np.argmax(y_pred, axis=1)      # axis = 1 : 행 방향
 print(y_pred)                           # [2 0 1 2 1 1 2 0 0 2 0 1 0 2 0]
+
+# 만약 y원핫인코딩할때 다른방식을 해서 y_test 데이터타입이 nparray가 아니면 numpy 함수 argmax를 바로 쓸 수없다.
+# -> 판다스 데이터타입을 넘파이배열로 변환 : y_test.values : 판다스의 값(value)의 데이터타입은 넘파이배열이기 때문에 values하면 넘파이배열을 반환 / 또는 toarray() 사용
 y_test = np.argmax(y_test, axis=1)
 print(y_test)                           # [2 0 1 1 1 1 2 0 0 2 0 1 0 2 0] 
 
-accuracy_score = accuracy_score(y_test, y_pred)
-print("accuracy : ", accuracy_score)  
+acc = accuracy_score(y_test, y_pred)
+print("accuracy : ", acc)  
