@@ -14,7 +14,7 @@ x_train, x_test, y_train, y_test = train_test_split(
     random_state = 8282,
 )
 
-# scikit-learn 분류모델은 입력데이터가 전부 1차원이어야한다.(y 원핫인코딩 X, but x 데이터 스케일러는 적용해야함)
+# scikit-learn 분류모델은 입력데이터가 전부 1차원이어야한다.(y 원핫인코딩 X, but x 데이터 스케일러는 적용가능)
 # 2. 모델구성 (전부 분류)
 from sklearn.svm import LinearSVC
 from sklearn.linear_model import LogisticRegression

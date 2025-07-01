@@ -43,6 +43,7 @@ model.fit(x, y)
 # 4. 평가, 예측
 # results = model.evaluate(x, y)
 results = model.score(x, y)
+# sklearn 머신러닝 모델의 디폴트 평가지표 : 회귀(r2_score), 분류(accracy)
 
 print(results)
 

@@ -44,7 +44,7 @@ x_train, x_test, y_train, y_test = train_test_split(
     stratify=y,
 )
 
-# scikit-learn 분류모델은 입력데이터가 전부 1차원이어야한다.(y 원핫인코딩 X, but x 데이터 스케일러는 적용해야함)
+# scikit-learn 분류모델은 입력데이터가 전부 1차원이어야한다.(y 원핫인코딩 X, but x 데이터 스케일러는 적용가능)
 # 2. 모델구성 (전부 분류)
 from sklearn.svm import LinearSVC
 from sklearn.linear_model import LogisticRegression
@@ -62,7 +62,8 @@ for index, value in enumerate(model_list):
     results = model.score(x_test, y_test)
     print(f"{value.__name__} :", results)
     
-# LinearSVC : 0.9166666666666666
-# LogisticRegression : 0.9694444444444444    
-# DecisionTreeClassifier : 0.8472222222222222
-# RandomForestClassifier : 0.9666666666666667
+# LinearSVC : 0.7484647705235941
+# LogisticRegression : 0.7543632837750485
+# DecisionTreeClassifier : 0.7148513251454428
+# RandomForestClassifier : 0.8102779573367809
+

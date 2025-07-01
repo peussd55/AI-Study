@@ -30,7 +30,7 @@ x_train, x_test, y_train, y_test = train_test_split(
 )
 
 
-# scikit-learn 분류모델은 입력데이터가 전부 1차원이어야한다.(y 원핫인코딩 X, but x 데이터 스케일러는 적용해야함)
+# scikit-learn 분류모델은 입력데이터가 전부 1차원이어야한다.(y 원핫인코딩 X, but x 데이터 스케일러 적용가능)
 # 2. 모델구성 (전부 분류)
 from sklearn.svm import LinearSVC
 from sklearn.linear_model import LogisticRegression
@@ -52,3 +52,4 @@ for index, value in enumerate(model_list):
 # LogisticRegression : 0.7104291627582765
 # DecisionTreeClassifier : 0.9406727881379999
 # RandomForestClassifier : 0.9564641188265364
+# 분류모델(LogisticRegression, DecisionTreeClassifier, RandomForestClassifier)이 회귀모델(LinearSVC)보다 성능이 확연히 좋다.
