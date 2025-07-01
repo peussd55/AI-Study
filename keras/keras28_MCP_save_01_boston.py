@@ -1,6 +1,6 @@
-### <<13>>
+### <<14>>
 
-# 27-1 카피
+# 27-3 카피
 
 import sklearn as sk
 print(sk.__version__)
@@ -63,32 +63,46 @@ es = EarlyStopping(
     patience=100,               # 참는 횟수는 10번
     restore_best_weights=True,  # 가장 최소지점을 save할것인지. default = False. False가 성능이 더 잘나오면 모델이 과적합됐을 수 있음. False 마지막 종료시점의 가중치를 저장한다.
 )
-path = './_save/keras27_mcp/'
+####################### mcp 세이브 파일명 만들기 #######################
+import datetime
+date = datetime.datetime.now()
+print(date)         # 2025-06-02 13:00:40.661379
+print(type(date))   # <class 'datetime.datetime'>
+date = date.strftime('%m%d_%H%M')
+print(date)         # 0602_1305
+print(type(date))   # <class 'str'>
+
+path = './_save/keras28_mcp/01_boston/'
+filename = '{epoch:04d}-{val_loss:.4f}.hdf5'    # 04d : 정수 4자리, .4f : 소수점 4자리
+filepath = "".join([path, 'k28_', date, '_', filename])     # 구분자를 공백("")으로 하겠다.
+# ./_save/keras27_mcp2/k27_0602_1442_{epoch:04d}-{val_loss:.4f}.hdf5
+
+print(filepath)
+
+#exit()
+
 mcp = ModelCheckpoint(          # 모델+가중치 저장
     monitor = 'val_loss',
     mode = 'auto',
     save_best_only=True,
-    filepath = path + 'keras27_mcp3.hdf5',  # 또는 .h5  # 파일명이 고정되었기때문에 val_loss 갱신될때마다 덮어쓰기
+    filepath = filepath,
 )
 
 hist = model.fit(x_train, y_train, 
                  epochs=1000, 
-                 batch_size=24, 
+                 batch_size=32, 
                  verbose=3, 
                  validation_split=0.1,
                  callbacks=[es, mcp],
                  )
 
-path = './_save/keras27_mcp/'
-model.save(path + 'keras27_3_save_model.h5')  # 학습가중치 저장
-
 # 4. 평가, 예측
 loss = model.evaluate(x_test, y_test)   # 훈련이 끝난 모델의 loss를 한번 계산해서  반환
 results = model.predict(x_test)
 
-print('loss :', loss)
 print('x_test :', x_test)
 #print('x_test의 예측값 :', results)
+print('loss :', loss)
 
 from sklearn.metrics import r2_score, mean_squared_error
 
@@ -101,6 +115,3 @@ print('RMSE :', rmse)
 
 r2 = r2_score(y_test, results)
 print('r2 스코어 :', r2)
-
-# RMSE : 4.351211286660016
-# r2 스코어 : 0.7823717785011496

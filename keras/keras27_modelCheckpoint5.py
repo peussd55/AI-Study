@@ -85,7 +85,7 @@ mcp = ModelCheckpoint(          # 모델+가중치 저장
     monitor = 'val_loss',
     mode = 'auto',
     save_best_only=True,
-    filepath = filepath,
+    filepath = filepath,    # filepath가 고정되지 않았기때문에 val_loss갱신될때 마다 신규파일저장
 )
 
 hist = model.fit(x_train, y_train, 

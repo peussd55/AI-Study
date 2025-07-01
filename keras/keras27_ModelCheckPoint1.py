@@ -62,6 +62,7 @@ es = EarlyStopping(
     mode = 'min',               # 최대값 : max, 알아서 찾아줘 : auto
     patience=100,               # 참는 횟수는 10번
     restore_best_weights=True,  # 가장 최소지점을 save할것인지. default = False. False가 성능이 더 잘나오면 모델이 과적합됐을 수 있음. False 마지막 종료시점의 가중치를 저장한다.
+    verbose=1,
 )
 path = './_save/keras27_mcp/'
 mcp = ModelCheckpoint(          # 모델+가중치 저장
@@ -69,12 +70,13 @@ mcp = ModelCheckpoint(          # 모델+가중치 저장
     mode = 'auto',
     save_best_only=True,
     filepath = path + 'keras27_mcp1.hdf5',  # 또는 .h5
+    verbose=1,
 )
 
 hist = model.fit(x_train, y_train, 
                  epochs=1000, 
                  batch_size=24, 
-                 verbose=3, 
+                 verbose=0, 
                  validation_split=0.1,
                  callbacks=[es, mcp],
                  )
