@@ -18,7 +18,7 @@ x, y = load_iris(return_X_y=True)
 
 n_split = 5
 # kfold = KFold(n_splits = n_split, shuffle=True, random_state=333)   # shuffle=False : 데이터를 앞에서 순서로 짜름. y라벨이 000 11 222 로 될 수있으므로 shuffle=True 필요
-kfold = StratifiedKFold(n_splits = n_split, shuffle=True, random_state=333) # KFold에 Stratified를 적용해주는 클래스. 분류에서만 쓰이는 함수
+kfold = StratifiedKFold(n_splits = n_split, shuffle=True, random_state=333) # KFold에 Stratified를 적용해주는 클래스. 분류에서만 쓰이는 클래스
 
 # 2. 모델
 model = MLPClassifier()
