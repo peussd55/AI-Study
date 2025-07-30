@@ -1,4 +1,4 @@
-### <<47>>
+### <<48>>
 
 import torch
 import torch.nn as nn 
@@ -32,9 +32,16 @@ data_type = 'multiclass_classification'
 # 1. 데이터
 # 전처리파이프라인 구성
 import torchvision.transforms as tr
-transf = tr.Compose([tr.Resize(56), tr.ToTensor()])
+transf = tr.Compose([tr.Resize(56), tr.ToTensor(), tr.Normalize((0.5), (0.5))])     # 표준화 : (x-0.5) / 0.5
 # Resize(0) : 0x0로 리사이즈
 # ToTensor() : 토치텐서타입으로 바꾸기 + MinMaxScaler
+# MinMaxScaler를 할지 StandardScaler를 할지 정하는 방법 : 통상적으로 활성화함수를 ReLU(0이상)를 쓸때는 MinMaxScaler를 적용하고 tanh(-1~1)을 쓸때는 StandardScaler적용
+#################### tr.Normailze((0.5), (0.5)) ####################
+# z_score Normalizeation (정규화의 표준화)
+# (x-평균) / 표준편차
+# (x - 0.5) / 0.5   위 식처럼해야하는데 통상 평균 0.5, 표편 0.5로 계산하면 
+# -1 ~ 1 사이의 범위가 나오니 이미지 전처리에서는 통상 0.5 0.5 한다.
+####################################################################
 
 # 데이터로드
 path = './_data/torch/'
@@ -59,7 +66,7 @@ img_tensor, label = train_dataset[0]
 print(img_tensor.shape)                     # x : torch.Size([1, 56, 56]). torch데이터는 채널이 앞에 와야함.
 print(label)                                # y : 9
 print(len(train_dataset.classes))           # 라벨갯수 : 10
-print(img_tensor.min(), img_tensor.max())   # sacler : tensor(0.) tensor(0.9765)
+print(img_tensor.min(), img_tensor.max())   # sacler : tensor(-1.) tensor(0.9529)
 # train_dataset.data, train_dataset.target : transform 되지않은 원래의 데이터셋을 불러온다.
 
 # # 스케일링 (transform 적용시 불필요)
@@ -218,6 +225,49 @@ class CNN(nn.Module):
         
 model = CNN(input_channel, output_dim).to(DEVICE)
 
+# summary 출력
+from torchinfo import summary
+summary(model, (batch_size, input_channel, train_dataset[0][0].shape[1], train_dataset[0][0].shape[2]))
+# ==========================================================================================
+# Layer (type:depth-idx)                   Output Shape              Param #
+# ==========================================================================================
+# CNN                                      [32, 10]                  --
+# ├─Sequential: 1-1                        [32, 64, 27, 27]          --
+# │    └─Conv2d: 2-1                       [32, 64, 54, 54]          640
+# │    └─ReLU: 2-2                         [32, 64, 54, 54]          --
+# │    └─MaxPool2d: 2-3                    [32, 64, 27, 27]          --
+# │    └─Dropout: 2-4                      [32, 64, 27, 27]          --
+# ├─Sequential: 1-2                        [32, 32, 12, 12]          --
+# │    └─Conv2d: 2-5                       [32, 32, 25, 25]          18,464
+# │    └─ReLU: 2-6                         [32, 32, 25, 25]          --
+# │    └─MaxPool2d: 2-7                    [32, 32, 12, 12]          --
+# │    └─Dropout: 2-8                      [32, 32, 12, 12]          --
+# ├─Sequential: 1-3                        [32, 16, 5, 5]            --
+# │    └─Conv2d: 2-9                       [32, 16, 10, 10]          4,624
+# │    └─ReLU: 2-10                        [32, 16, 10, 10]          --
+# │    └─MaxPool2d: 2-11                   [32, 16, 5, 5]            --
+# │    └─Dropout: 2-12                     [32, 16, 5, 5]            --
+# ├─Flatten: 1-4                           [32, 400]                 --
+# ├─Sequential: 1-5                        [32, 64]                  --
+# │    └─Linear: 2-13                      [32, 64]                  25,664
+# │    └─ReLU: 2-14                        [32, 64]                  --
+# ├─Sequential: 1-6                        [32, 32]                  --
+# │    └─Linear: 2-15                      [32, 32]                  2,080
+# │    └─ReLU: 2-16                        [32, 32]                  --
+# ├─Linear: 1-7                            [32, 10]                  330
+# ==========================================================================================
+# Total params: 51,802
+# Trainable params: 51,802
+# Non-trainable params: 0
+# Total mult-adds (M): 444.69
+# ==========================================================================================
+# Input size (MB): 0.40
+# Forward/backward pass size (MB): 53.33
+# Params size (MB): 0.21
+# Estimated Total Size (MB): 53.94
+# ==========================================================================================
+
+exit()
 # 3. 컴파일, 훈련
 criterion = criterion
 optimizer = optim.Adam(model.parameters(), lr=lr)
@@ -323,8 +373,8 @@ else:
     print('acc :', accuracy_score(y_true, y_predict))
 
 """
-걸린시간 : 172.10633969306946 초
-최종 loss : 0.3833535307417282
-최종 acc : 0.8614217252396166
-acc : 0.8613
+걸린시간 : 222.83863615989685 초
+최종 loss : 0.3503579176700534
+최종 acc : 0.8730031948881789
+acc : 0.8729
 """

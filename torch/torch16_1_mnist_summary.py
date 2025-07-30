@@ -1,11 +1,11 @@
-### <<47>>
+### <<48>>
 
 import torch
 import torch.nn as nn 
 import torch.optim as optim 
 import numpy as np 
 from torch.utils.data import TensorDataset, DataLoader 
-from torchvision.datasets import FashionMNIST
+from torchvision.datasets import MNIST
 import random, time
 from sklearn.metrics import accuracy_score, r2_score
 from sklearn.model_selection import train_test_split
@@ -32,24 +32,31 @@ data_type = 'multiclass_classification'
 # 1. 데이터
 # 전처리파이프라인 구성
 import torchvision.transforms as tr
-transf = tr.Compose([tr.Resize(56), tr.ToTensor()])
+transf = tr.Compose([tr.Resize(56), tr.ToTensor(), tr.Normalize((0.5), (0.5))])     # 표준화 : (x-0.5) / 0.5
 # Resize(0) : 0x0로 리사이즈
 # ToTensor() : 토치텐서타입으로 바꾸기 + MinMaxScaler
+# MinMaxScaler를 할지 StandardScaler를 할지 정하는 방법 : 통상적으로 활성화함수를 ReLU(0이상)를 쓸때는 MinMaxScaler를 적용하고 tanh(-1~1)을 쓸때는 StandardScaler적용
+#################### tr.Normailze((0.5), (0.5)) ####################
+# z_score Normalizeation (정규화의 표준화)
+# (x-평균) / 표준편차
+# (x - 0.5) / 0.5   위 식처럼해야하는데 통상 평균 0.5, 표편 0.5로 계산하면 
+# -1 ~ 1 사이의 범위가 나오니 이미지 전처리에서는 통상 0.5 0.5 한다.
+####################################################################
 
 # 데이터로드
 path = './_data/torch/'
-train_dataset = FashionMNIST(path, train=True, download=True, transform=transf)  # train=True 학습데이터 로드
-test_dataset = FashionMNIST(path, train=False, download=True, transform=transf)
-print(type(train_dataset))              # <class 'torchvision.datasets.mnist.FashionMNIST'>
-print(train_dataset[0])   
-# 전처리를 거쳐서 (PIL객체, 레이블) -> (텐서객체, 레이블)로 반환              
-# (tensor([[[0., 0., 0.,  ..., 0., 0., 0.],     
-#          [0., 0., 0.,  ..., 0., 0., 0.],      
-#          [0., 0., 0.,  ..., 0., 0., 0.],      
+train_dataset = MNIST(path, train=True, download=True, transform=transf)  # train=True 학습데이터 로드
+test_dataset = MNIST(path, train=False, download=True, transform=transf)
+print(type(train_dataset))              # <class 'torchvision.datasets.mnist.MNIST'>
+print(train_dataset[0])
+# 전처리를 거쳐서 (PIL객체, 레이블) -> (텐서객체, 레이블)로 반환
+# (tensor([[[0., 0., 0.,  ..., 0., 0., 0.],
+#          [0., 0., 0.,  ..., 0., 0., 0.],
+#          [0., 0., 0.,  ..., 0., 0., 0.],
 #          ...,
-#          [0., 0., 0.,  ..., 0., 0., 0.],      
-#          [0., 0., 0.,  ..., 0., 0., 0.],      
-#          [0., 0., 0.,  ..., 0., 0., 0.]]]), 9
+#          [0., 0., 0.,  ..., 0., 0., 0.],
+#          [0., 0., 0.,  ..., 0., 0., 0.],
+#          [0., 0., 0.,  ..., 0., 0., 0.]]]), 5)
 print(type(train_dataset[0]))           # <class 'tuple'>
 print(type(train_dataset[0][0]))        # <class 'torch.Tensor'> (transform적용) 또는 <class 'PIL.Image.Image'>
 print(type(train_dataset[0][1]))        # <class 'int'>
@@ -57,9 +64,9 @@ print(type(train_dataset[0][1]))        # <class 'int'>
 # 전처리확인
 img_tensor, label = train_dataset[0]
 print(img_tensor.shape)                     # x : torch.Size([1, 56, 56]). torch데이터는 채널이 앞에 와야함.
-print(label)                                # y : 9
+print(label)                                # y : 5
 print(len(train_dataset.classes))           # 라벨갯수 : 10
-print(img_tensor.min(), img_tensor.max())   # sacler : tensor(0.) tensor(0.9765)
+print(img_tensor.min(), img_tensor.max())   # sacler : tensor(-1.) tensor(0.9843)
 # train_dataset.data, train_dataset.target : transform 되지않은 원래의 데이터셋을 불러온다.
 
 # # 스케일링 (transform 적용시 불필요)
@@ -203,6 +210,7 @@ class CNN(nn.Module):
         self.output_layer = nn.Linear(32, output_dim)       
         # output_dim < y라벨 갯수일 시 런타임 에러 : y가 y^의 존재하지않는 인덱싱주소를 찾아감
         # output_dim > y라벨 갯수일 시 인덱싱 주소가 필요한 것보다 많아 런타임 에러는 안나지만 확률 누수로 성능에 악영향끼침
+        self.drop = nn.Dropout(0.3)
         
     def forward(self, x):   # 오버라이딩
         x = self.hidden_layer1(x)
@@ -218,6 +226,120 @@ class CNN(nn.Module):
         
 model = CNN(input_channel, output_dim).to(DEVICE)
 
+# [model summary 보는 법 4가지]
+print(model)    # init에서 정의한 것을 출력
+# CNN(
+#   (hidden_layer1): Sequential(
+#     (0): Conv2d(1, 64, kernel_size=(3, 3), stride=(1, 1))
+#     (1): ReLU()
+#     (2): MaxPool2d(kernel_size=(2, 2), stride=2, padding=0, dilation=1, ceil_mode=False)
+#     (3): Dropout(p=0.2, inplace=False)
+#   )
+#   (hidden_layer2): Sequential(
+#     (0): Conv2d(64, 32, kernel_size=(3, 3), stride=(1, 1))
+#     (1): ReLU()
+#     (2): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), padding=0, dilation=1, ceil_mode=False)
+#     (3): Dropout(p=0.2, inplace=False)
+#   )
+#   (hidden_layer3): Sequential(
+#     (0): Conv2d(32, 16, kernel_size=(3, 3), stride=(1, 1))
+#     (1): ReLU()
+#     (2): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), padding=0, dilation=1, ceil_mode=False)
+#     (3): Dropout(p=0.2, inplace=False)
+#   )
+#   (flatten): Flatten(start_dim=1, end_dim=-1)
+#   (hidden_layer4): Sequential(
+#     (0): Linear(in_features=400, out_features=64, bias=True)
+#     (1): ReLU()
+#   )
+#   (hidden_layer5): Sequential(
+#     (0): Linear(in_features=64, out_features=32, bias=True)
+#     (1): ReLU()
+#   )
+#   (output_layer): Linear(in_features=32, out_features=10, bias=True)
+# )
+
+# pip install torchsummary
+from torchsummary import summary as summary1
+# pip install torchinfo
+from torchinfo import summary as summary2
+summary1(model, (1, 56, 56))
+# ----------------------------------------------------------------
+#         Layer (type)               Output Shape         Param #
+# ================================================================
+#             Conv2d-1           [-1, 64, 54, 54]             640
+#               ReLU-2           [-1, 64, 54, 54]               0
+#          MaxPool2d-3           [-1, 64, 27, 27]               0
+#            Dropout-4           [-1, 64, 27, 27]               0
+#             Conv2d-5           [-1, 32, 25, 25]          18,464
+#               ReLU-6           [-1, 32, 25, 25]               0
+#          MaxPool2d-7           [-1, 32, 12, 12]               0
+#            Dropout-8           [-1, 32, 12, 12]               0
+#             Conv2d-9           [-1, 16, 10, 10]           4,624
+#              ReLU-10           [-1, 16, 10, 10]               0
+#         MaxPool2d-11             [-1, 16, 5, 5]               0
+#           Dropout-12             [-1, 16, 5, 5]               0
+#           Flatten-13                  [-1, 400]               0
+#            Linear-14                   [-1, 64]          25,664
+#              ReLU-15                   [-1, 64]               0
+#            Linear-16                   [-1, 32]           2,080
+#              ReLU-17                   [-1, 32]               0
+#            Linear-18                   [-1, 10]             330
+# ================================================================
+# Total params: 51,802
+# Trainable params: 51,802
+# Non-trainable params: 0
+# ----------------------------------------------------------------
+# Input size (MB): 0.01
+# Forward/backward pass size (MB): 3.97
+# Params size (MB): 0.20
+# Estimated Total Size (MB): 4.18
+# ----------------------------------------------------------------
+summary2(model, (32, 1, 56, 56))    # 입력크기를 직접 전부 다 명시
+# 또는 summary2(model)
+# ==========================================================================================
+# Layer (type:depth-idx)                   Output Shape              Param #
+# ==========================================================================================
+# CNN                                      [32, 10]                  --
+# ├─Sequential: 1-1                        [32, 64, 27, 27]          --
+# │    └─Conv2d: 2-1                       [32, 64, 54, 54]          640
+# │    └─ReLU: 2-2                         [32, 64, 54, 54]          --
+# │    └─MaxPool2d: 2-3                    [32, 64, 27, 27]          --
+# │    └─Dropout: 2-4                      [32, 64, 27, 27]          --
+# ├─Sequential: 1-2                        [32, 32, 12, 12]          --
+# │    └─Conv2d: 2-5                       [32, 32, 25, 25]          18,464
+# │    └─ReLU: 2-6                         [32, 32, 25, 25]          --
+# │    └─MaxPool2d: 2-7                    [32, 32, 12, 12]          --
+# │    └─Dropout: 2-8                      [32, 32, 12, 12]          --
+# ├─Sequential: 1-3                        [32, 16, 5, 5]            --
+# │    └─Conv2d: 2-9                       [32, 16, 10, 10]          4,624
+# │    └─ReLU: 2-10                        [32, 16, 10, 10]          --
+# │    └─MaxPool2d: 2-11                   [32, 16, 5, 5]            --
+# │    └─Dropout: 2-12                     [32, 16, 5, 5]            --
+# ├─Flatten: 1-4                           [32, 400]                 --
+# ├─Sequential: 1-5                        [32, 64]                  --
+# │    └─Linear: 2-13                      [32, 64]                  25,664
+# │    └─ReLU: 2-14                        [32, 64]                  --
+# ├─Sequential: 1-6                        [32, 32]                  --
+# │    └─Linear: 2-15                      [32, 32]                  2,080
+# │    └─ReLU: 2-16                        [32, 32]                  --
+# ├─Linear: 1-7                            [32, 10]                  330
+# ==========================================================================================
+# Total params: 51,802
+# Trainable params: 51,802
+# Non-trainable params: 0
+# Total mult-adds (M): 444.69
+# ==========================================================================================
+# Input size (MB): 0.40
+# Forward/backward pass size (MB): 53.33
+# Params size (MB): 0.21
+# Estimated Total Size (MB): 53.94
+# ==========================================================================================
+
+# 권장방법 : summary2(model, (32, 1, 56, 56)) 
+# -> 모델입력사이즈를 정확히 명시해서 정확한 정보 출력이 가능하다.
+
+exit()
 # 3. 컴파일, 훈련
 criterion = criterion
 optimizer = optim.Adam(model.parameters(), lr=lr)
@@ -323,8 +445,8 @@ else:
     print('acc :', accuracy_score(y_true, y_predict))
 
 """
-걸린시간 : 172.10633969306946 초
-최종 loss : 0.3833535307417282
-최종 acc : 0.8614217252396166
-acc : 0.8613
+걸린시간 : 225.85618233680725 초
+최종 loss : 0.03634700550261047
+최종 acc : 0.9876198083067093
+acc : 0.9876
 """

@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.optim as optim 
 import numpy as np 
 from torch.utils.data import TensorDataset, DataLoader 
-from torchvision.datasets import FashionMNIST
+from torchvision.datasets import CIFAR100
 import random, time
 from sklearn.metrics import accuracy_score, r2_score
 from sklearn.model_selection import train_test_split
@@ -29,6 +29,53 @@ data_list = ['regression', 'binary_classification', 'multiclass_classification']
 data_type = 'multiclass_classification'
 ########################## 랜덤고정 & 쿠다확인 & 데이터종류명시 ##########################
 
+class EarlyStopping:
+    """Early stops the training if validation loss doesn't improve after a given patience."""
+    def __init__(self, patience=7, verbose=False, delta=0, path='checkpoint.pt'):
+        """
+        Args:
+            patience (int): How long to wait after last time validation loss improved.
+                            Default: 7
+            verbose (bool): If True, prints a message for each validation loss improvement. 
+                            Default: False
+            delta (float): Minimum change in the monitored quantity to qualify as an improvement.
+                            Default: 0
+            path (str): Path for the checkpoint to be saved to.
+                            Default: 'checkpoint.pt'
+        """
+        self.patience = patience
+        self.verbose = verbose
+        self.counter = 0
+        self.best_score = None
+        self.early_stop = False
+        self.val_loss_min = np.Inf
+        self.delta = delta
+        self.path = path
+
+    def __call__(self, val_loss, model):
+        score = -val_loss
+
+        if self.best_score is None:
+            self.best_score = score
+            self.save_checkpoint(val_loss, model)
+        elif score < self.best_score + self.delta:
+            self.counter += 1
+            if self.verbose:
+                print(f'EarlyStopping counter: {self.counter} out of {self.patience}')
+            if self.counter >= self.patience:
+                self.early_stop = True
+        else:
+            self.best_score = score
+            self.save_checkpoint(val_loss, model)
+            self.counter = 0
+
+    def save_checkpoint(self, val_loss, model):
+        '''Saves model when validation loss decrease.'''
+        if self.verbose:
+            print(f'Validation loss decreased ({self.val_loss_min:.6f} --> {val_loss:.6f}).  Saving model ...')
+        torch.save(model.state_dict(), self.path)
+        self.val_loss_min = val_loss
+
 # 1. 데이터
 # 전처리파이프라인 구성
 import torchvision.transforms as tr
@@ -38,28 +85,28 @@ transf = tr.Compose([tr.Resize(56), tr.ToTensor()])
 
 # 데이터로드
 path = './_data/torch/'
-train_dataset = FashionMNIST(path, train=True, download=True, transform=transf)  # train=True 학습데이터 로드
-test_dataset = FashionMNIST(path, train=False, download=True, transform=transf)
-print(type(train_dataset))              # <class 'torchvision.datasets.mnist.FashionMNIST'>
-print(train_dataset[0])   
-# 전처리를 거쳐서 (PIL객체, 레이블) -> (텐서객체, 레이블)로 반환              
-# (tensor([[[0., 0., 0.,  ..., 0., 0., 0.],     
-#          [0., 0., 0.,  ..., 0., 0., 0.],      
-#          [0., 0., 0.,  ..., 0., 0., 0.],      
+train_dataset = CIFAR100(path, train=True, download=True, transform=transf)  # train=True 학습데이터 로드
+test_dataset = CIFAR100(path, train=False, download=True, transform=transf)
+print(type(train_dataset))              # <class 'torchvision.datasets.cifar.CIFAR100'>
+print(train_dataset[0])          
+# 전처리를 거쳐서 (PIL객체, 레이블) -> (텐서객체, 레이블)로 반환       
+# (tensor([[[0.2314, 0.2078, 0.1725,  ..., 0.5961, 0.5843, 0.5804],
+#          [0.1725, 0.1490, 0.1137,  ..., 0.5490, 0.5451, 0.5451], 
+#          [0.0745, 0.0510, 0.0157,  ..., 0.4745, 0.4824, 0.4863],   
 #          ...,
-#          [0., 0., 0.,  ..., 0., 0., 0.],      
-#          [0., 0., 0.,  ..., 0., 0., 0.],      
-#          [0., 0., 0.,  ..., 0., 0., 0.]]]), 9
+#           [0.3804, 0.3098, 0.1961,  ..., 0.1451, 0.1451, 0.1451],
+#           [0.4275, 0.3804, 0.3059,  ..., 0.2549, 0.2392, 0.2275],
+#           [0.4549, 0.4235, 0.3765,  ..., 0.3255, 0.2980, 0.2824]]]), 19)
 print(type(train_dataset[0]))           # <class 'tuple'>
 print(type(train_dataset[0][0]))        # <class 'torch.Tensor'> (transform적용) 또는 <class 'PIL.Image.Image'>
 print(type(train_dataset[0][1]))        # <class 'int'>
 
 # 전처리확인
 img_tensor, label = train_dataset[0]
-print(img_tensor.shape)                     # x : torch.Size([1, 56, 56]). torch데이터는 채널이 앞에 와야함.
-print(label)                                # y : 9
-print(len(train_dataset.classes))           # 라벨갯수 : 10
-print(img_tensor.min(), img_tensor.max())   # sacler : tensor(0.) tensor(0.9765)
+print(img_tensor.shape)                     # x : torch.Size([3, 56, 56]). torch데이터는 채널이 앞에 와야함.
+print(label)                                # y : 19
+print(len(train_dataset.classes))           # 라벨갯수 : 100
+print(img_tensor.min(), img_tensor.max())   # sacler : tensor(0.0078) tensor(1.)
 # train_dataset.data, train_dataset.target : transform 되지않은 원래의 데이터셋을 불러온다.
 
 # # 스케일링 (transform 적용시 불필요)
@@ -116,14 +163,14 @@ print(f"분리된 검증 데이터셋: {len(val_set)}개")
 input_channel = train_dataset[0][0].shape[0]
 output_dim = len(train_dataset.classes)
 lr=1e-4
-epochs = 10
+epochs = 30
 criterion_map = {
     'regression': nn.MSELoss,
     'binary_classification': nn.BCELoss,
     'multiclass_classification': nn.CrossEntropyLoss
 }
 criterion = criterion_map[data_type]()
-batch_size = 32
+batch_size = 3200
 
 # 토치데이터로더 생성
 train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)       # shuffle=True : 매 epoch마다 배치순서 섞음. 과적합방지 필수
@@ -147,19 +194,19 @@ print("train 갯수 :", len(train_set))
 print("validation 갯수 :", len(val_set))
 print("test 갯수 :", len(test_dataset))
 print("배치 갯수 :", len(train_loader))
-# [파라미터] input_channel : 1
-# [파라미터] output_dim : 10
+# [파라미터] input_channel : 3
+# [파라미터] output_dim : 100
 # ----------------
-# [하이퍼 파라미터] epochs : 10
+# [하이퍼 파라미터] epochs : 30
 # [하이퍼 파라미터] criterion : nn.CrossEntropyLoss()
-# [하이퍼 파라미터] 배치사이즈 : 32
+# [하이퍼 파라미터] 배치사이즈 : 3200
 # [하이퍼 파라미터] learning_rate : 0.0001
 # ----------------
-# 원시데이터 갯수 : 70000
-# train 갯수 : 54000
-# validation 갯수 : 6000
+# 원시데이터 갯수 : 60000
+# train 갯수 : 45000
+# validation 갯수 : 5000
 # test 갯수 : 10000
-# 배치 갯수 : 1688
+# 배치 갯수 : 15
 
 # exit()
 # 2. 모델
@@ -323,8 +370,8 @@ else:
     print('acc :', accuracy_score(y_true, y_predict))
 
 """
-걸린시간 : 172.10633969306946 초
-최종 loss : 0.3833535307417282
-최종 acc : 0.8614217252396166
-acc : 0.8613
+걸린시간 : 4453.565259218216 초
+최종 loss : 3.7050853967666626
+최종 acc : 0.13968749716877937
+acc : 0.1354
 """

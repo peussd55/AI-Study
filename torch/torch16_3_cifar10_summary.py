@@ -1,11 +1,11 @@
-### <<47>>
+### <<48>>
 
 import torch
 import torch.nn as nn 
 import torch.optim as optim 
 import numpy as np 
 from torch.utils.data import TensorDataset, DataLoader 
-from torchvision.datasets import FashionMNIST
+from torchvision.datasets import CIFAR10
 import random, time
 from sklearn.metrics import accuracy_score, r2_score
 from sklearn.model_selection import train_test_split
@@ -32,34 +32,41 @@ data_type = 'multiclass_classification'
 # 1. 데이터
 # 전처리파이프라인 구성
 import torchvision.transforms as tr
-transf = tr.Compose([tr.Resize(56), tr.ToTensor()])
+transf = tr.Compose([tr.Resize(56), tr.ToTensor(), tr.Normalize((0.5), (0.5))])     # 표준화 : (x-0.5) / 0.5
 # Resize(0) : 0x0로 리사이즈
 # ToTensor() : 토치텐서타입으로 바꾸기 + MinMaxScaler
+# MinMaxScaler를 할지 StandardScaler를 할지 정하는 방법 : 통상적으로 활성화함수를 ReLU(0이상)를 쓸때는 MinMaxScaler를 적용하고 tanh(-1~1)을 쓸때는 StandardScaler적용
+#################### tr.Normailze((0.5), (0.5)) ####################
+# z_score Normalizeation (정규화의 표준화)
+# (x-평균) / 표준편차
+# (x - 0.5) / 0.5   위 식처럼해야하는데 통상 평균 0.5, 표편 0.5로 계산하면 
+# -1 ~ 1 사이의 범위가 나오니 이미지 전처리에서는 통상 0.5 0.5 한다.
+####################################################################
 
 # 데이터로드
 path = './_data/torch/'
-train_dataset = FashionMNIST(path, train=True, download=True, transform=transf)  # train=True 학습데이터 로드
-test_dataset = FashionMNIST(path, train=False, download=True, transform=transf)
-print(type(train_dataset))              # <class 'torchvision.datasets.mnist.FashionMNIST'>
-print(train_dataset[0])   
-# 전처리를 거쳐서 (PIL객체, 레이블) -> (텐서객체, 레이블)로 반환              
-# (tensor([[[0., 0., 0.,  ..., 0., 0., 0.],     
-#          [0., 0., 0.,  ..., 0., 0., 0.],      
-#          [0., 0., 0.,  ..., 0., 0., 0.],      
+train_dataset = CIFAR10(path, train=True, download=True, transform=transf)  # train=True 학습데이터 로드
+test_dataset = CIFAR10(path, train=False, download=True, transform=transf)
+print(type(train_dataset))              # <class 'torchvision.datasets.cifar.CIFAR10'>
+print(train_dataset[0])       
+# 전처리를 거쳐서 (PIL객체, 레이블) -> (텐서객체, 레이블)로 반환          
+# (tensor([[[0.2314, 0.2078, 0.1725,  ..., 0.5961, 0.5843, 0.5804],
+#          [0.1725, 0.1490, 0.1137,  ..., 0.5490, 0.5451, 0.5451], 
+#          [0.0745, 0.0510, 0.0157,  ..., 0.4745, 0.4824, 0.4863],   
 #          ...,
-#          [0., 0., 0.,  ..., 0., 0., 0.],      
-#          [0., 0., 0.,  ..., 0., 0., 0.],      
-#          [0., 0., 0.,  ..., 0., 0., 0.]]]), 9
+#           [0.3804, 0.3098, 0.1961,  ..., 0.1451, 0.1451, 0.1451],
+#           [0.4275, 0.3804, 0.3059,  ..., 0.2549, 0.2392, 0.2275],
+#           [0.4549, 0.4235, 0.3765,  ..., 0.3255, 0.2980, 0.2824]]]), 6)
 print(type(train_dataset[0]))           # <class 'tuple'>
 print(type(train_dataset[0][0]))        # <class 'torch.Tensor'> (transform적용) 또는 <class 'PIL.Image.Image'>
 print(type(train_dataset[0][1]))        # <class 'int'>
 
 # 전처리확인
 img_tensor, label = train_dataset[0]
-print(img_tensor.shape)                     # x : torch.Size([1, 56, 56]). torch데이터는 채널이 앞에 와야함.
-print(label)                                # y : 9
+print(img_tensor.shape)                     # x : torch.Size([3, 56, 56]). torch데이터는 채널이 앞에 와야함.
+print(label)                                # y : 6
 print(len(train_dataset.classes))           # 라벨갯수 : 10
-print(img_tensor.min(), img_tensor.max())   # sacler : tensor(0.) tensor(0.9765)
+print(img_tensor.min(), img_tensor.max())   # sacler : tensor(-0.9922) tensor(0.9765)
 # train_dataset.data, train_dataset.target : transform 되지않은 원래의 데이터셋을 불러온다.
 
 # # 스케일링 (transform 적용시 불필요)
@@ -116,14 +123,14 @@ print(f"분리된 검증 데이터셋: {len(val_set)}개")
 input_channel = train_dataset[0][0].shape[0]
 output_dim = len(train_dataset.classes)
 lr=1e-4
-epochs = 10
+epochs = 100
 criterion_map = {
     'regression': nn.MSELoss,
     'binary_classification': nn.BCELoss,
     'multiclass_classification': nn.CrossEntropyLoss
 }
 criterion = criterion_map[data_type]()
-batch_size = 32
+batch_size = 320
 
 # 토치데이터로더 생성
 train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)       # shuffle=True : 매 epoch마다 배치순서 섞음. 과적합방지 필수
@@ -147,19 +154,19 @@ print("train 갯수 :", len(train_set))
 print("validation 갯수 :", len(val_set))
 print("test 갯수 :", len(test_dataset))
 print("배치 갯수 :", len(train_loader))
-# [파라미터] input_channel : 1
+# [파라미터] input_channel : 3
 # [파라미터] output_dim : 10
 # ----------------
-# [하이퍼 파라미터] epochs : 10
+# [하이퍼 파라미터] epochs : 100
 # [하이퍼 파라미터] criterion : nn.CrossEntropyLoss()
-# [하이퍼 파라미터] 배치사이즈 : 32
+# [하이퍼 파라미터] 배치사이즈 : 320
 # [하이퍼 파라미터] learning_rate : 0.0001
 # ----------------
-# 원시데이터 갯수 : 70000
-# train 갯수 : 54000
-# validation 갯수 : 6000
+# 원시데이터 갯수 : 60000
+# train 갯수 : 45000
+# validation 갯수 : 5000
 # test 갯수 : 10000
-# 배치 갯수 : 1688
+# 배치 갯수 : 141
 
 # exit()
 # 2. 모델
@@ -218,6 +225,49 @@ class CNN(nn.Module):
         
 model = CNN(input_channel, output_dim).to(DEVICE)
 
+# summary 출력
+from torchinfo import summary
+summary(model, (batch_size, input_channel, train_dataset[0][0].shape[1], train_dataset[0][0].shape[2]))
+# ==========================================================================================
+# Layer (type:depth-idx)                   Output Shape              Param #
+# ==========================================================================================
+# CNN                                      [320, 10]                 --
+# ├─Sequential: 1-1                        [320, 64, 27, 27]         --
+# │    └─Conv2d: 2-1                       [320, 64, 54, 54]         1,792
+# │    └─ReLU: 2-2                         [320, 64, 54, 54]         --
+# │    └─MaxPool2d: 2-3                    [320, 64, 27, 27]         --
+# │    └─Dropout: 2-4                      [320, 64, 27, 27]         --
+# ├─Sequential: 1-2                        [320, 32, 12, 12]         --
+# │    └─Conv2d: 2-5                       [320, 32, 25, 25]         18,464
+# │    └─ReLU: 2-6                         [320, 32, 25, 25]         --
+# │    └─MaxPool2d: 2-7                    [320, 32, 12, 12]         --
+# │    └─Dropout: 2-8                      [320, 32, 12, 12]         --
+# ├─Sequential: 1-3                        [320, 16, 5, 5]           --
+# │    └─Conv2d: 2-9                       [320, 16, 10, 10]         4,624
+# │    └─ReLU: 2-10                        [320, 16, 10, 10]         --
+# │    └─MaxPool2d: 2-11                   [320, 16, 5, 5]           --
+# │    └─Dropout: 2-12                     [320, 16, 5, 5]           --
+# ├─Flatten: 1-4                           [320, 400]                --
+# ├─Sequential: 1-5                        [320, 64]                 --
+# │    └─Linear: 2-13                      [320, 64]                 25,664
+# │    └─ReLU: 2-14                        [320, 64]                 --
+# ├─Sequential: 1-6                        [320, 32]                 --
+# │    └─Linear: 2-15                      [320, 32]                 2,080
+# │    └─ReLU: 2-16                        [320, 32]                 --
+# ├─Linear: 1-7                            [320, 10]                 330
+# ==========================================================================================
+# Total params: 52,954
+# Trainable params: 52,954
+# Non-trainable params: 0
+# Total mult-adds (G): 5.52
+# ==========================================================================================
+# Input size (MB): 12.04
+# Forward/backward pass size (MB): 533.32
+# Params size (MB): 0.21
+# Estimated Total Size (MB): 545.58
+# ==========================================================================================
+
+exit()
 # 3. 컴파일, 훈련
 criterion = criterion
 optimizer = optim.Adam(model.parameters(), lr=lr)
@@ -323,8 +373,8 @@ else:
     print('acc :', accuracy_score(y_true, y_predict))
 
 """
-걸린시간 : 172.10633969306946 초
-최종 loss : 0.3833535307417282
-최종 acc : 0.8614217252396166
-acc : 0.8613
+걸린시간 : 1815.078148841858 초
+최종 loss : 1.0056702680885792
+최종 acc : 0.652539074420929
+acc : 0.6532
 """
