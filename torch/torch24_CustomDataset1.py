@@ -10,7 +10,7 @@ class MyDataset(Dataset):
         self.y = [0, 1, 0, 1, 0]
         
     def __len__(self):
-        return len(self.x)
+        return len(self.x)      # 어차피 x길이와 y길이는 같은 데이터로 훈련시키기때문에 self.x만 return한다.
     
     def __getitem__(self, idx):
         return torch.tensor(self.x[idx]), torch.tensor(self.y[idx])

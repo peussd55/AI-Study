@@ -73,7 +73,7 @@ class RNN(nn.Module):
         self.rnn_layer1 = nn.RNN(
             input_size=1,       # feature 갯수. 텐서플로우에서는 input_dim
             hidden_size=32,     # output_node의 갯수. 텐서플로우에서는 unit
-            # num_layers=1,     # 디폴트=1. RNN 은닉층의 레이어의 갯수
+            # num_layers=1,     # 디폴트=1. RNN 은닉층의 레이어의 갯수. 똑같은 RNN레이어를 layers 수 만큼 쌓는다. 각 레이어마다 밑에 dropout을 적용하려면 1로 하고 forward에서 직접 구성해줘야한다.
             batch_first=True,   # rnn input 파라미터 기본 순서 : TimeSteps, Feature, Batch 을 -> Batch, Timesteps, Feature로 변경. 무조건 넣어주는옵션으로 생각.
                                 # (3, 1, N) -> (N, 3, 1)
         )   # (N, 3, 32)
