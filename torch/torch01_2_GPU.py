@@ -21,23 +21,11 @@ y = np.array([1,2,3])
 # print(x.size())     # torch.Size([3])
 
 # 차원변환 : torch는 tf처럼 자동으로 행렬변환후 연산을 하지 않으므로 x,y 행렬변환을 미리 해줘야한다.
-x = torch.FloatTensor(x).unsqueeze(1).to(DEVICE)    # 또는 .to(cuda)
+x = torch.FloatTensor(x).unsqueeze(1).to(DEVICE)    # 또는 .to('cuda')
 
 print(x.size())     # torch.Size([3, 1])
 y = torch.FloatTensor(y).unsqueeze(1).to(DEVICE)
 print(y.size())     # torch.Size([3, 1])
-
-########## standard scaling ##########
-# dim = axis : 행방향을 따라 이동하며 연산 = 열 단위로 연산. 0번째 차원(축)=shape에서 맨 왼쪽
-# keepdim : 차원수 유지여부(True시 계산이 용이)
-x_mean = torch.mean(x, dim=0, keepdim=True)     
-x_std = torch.std(x, dim=0, keepdim=True)
-x = (x - x_mean) / x_std
-######################################
-print('스케일링 후 :', x)
-# 스케일링 후 : tensor([[-1.],
-#         [ 0.],
-#         [ 1.]], device='cuda:0')
 
 # 2. 모델 구성
 # model.add(Dense(1, iniput_dim=1))      # 아웃풋, 인풋
@@ -80,11 +68,7 @@ def evaluate(model, criterion, x, y):
 
 loss2 = evaluate(model, criterion, x, y)
 print('최종 loss :', loss2)
-# 최종 loss : 1.1227760041143675e-11
 
-x_pred = (torch.Tensor([[4]]).to(DEVICE) - x_mean) / x_std
-print(x_pred)   # tensor([[2.]], device='cuda:0')
-result = model(x_pred)
-
-print('4의 예측값:', result.item())
-# 4의 예측값: 3.999992847442627
+print(torch.Tensor([[4]]).shape)    # torch.Size([1, 1])
+result = model(torch.Tensor([[4]]).to(DEVICE))
+print('4의 예측값 :', result.item())

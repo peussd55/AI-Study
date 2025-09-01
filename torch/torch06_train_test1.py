@@ -31,9 +31,11 @@ y_test = torch.tensor(y_test, dtype=torch.float32).unsqueeze(1).to(DEVICE)
 
 print(x_train.size(), y_train.size())   # torch.Size([7, 1]) torch.Size([7, 1])
 
-###### standard scaling #####
-x_train_mean = torch.mean(x_train)
-x_train_std = torch.std(x_train)
+###### standard scaling ###### 
+# dim = axis : 행방향을 따라 이동하며 연산 = 열 단위로 연산. 0번째 차원(축)=shape에서 맨 왼쪽
+# keepdim : 차원수 유지여부(True시 계산이 용이)
+x_train_mean = torch.mean(x_train, dim=0, keepdim=True)
+x_train_std = torch.std(x_train, dim=0, keepdim=True )
 x_train = (x_train - x_train_mean) / x_train_std
 
 # test는 sklearn scaler에서 transform만 해야하는 것과 같으므로 train의 mean, std를 쓴다.

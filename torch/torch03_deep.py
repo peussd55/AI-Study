@@ -28,8 +28,10 @@ y = torch.FloatTensor(y).unsqueeze(1).to(DEVICE)
 print(y.size())     # torch.Size([3, 1])
 
 ########## standard scaling ##########
-x_mean = torch.mean(x)
-x_std = torch.std(x)
+# dim = axis : 행방향을 따라 이동하며 연산 = 열 단위로 연산. 0번째 차원(축)=shape에서 맨 왼쪽
+# keepdim : 차원수 유지여부(True시 계산이 용이)
+x_mean = torch.mean(x, dim=0, keepdim=True)     
+x_std = torch.std(x, dim=0, keepdim=True)
 x = (x - x_mean) / x_std
 ######################################
 print('스케일링 후 :', x)
