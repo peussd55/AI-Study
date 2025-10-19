@@ -1,0 +1,12 @@
+- 전이학습 = 사전학습 = pretraining : 이미 있는 모델의 히든레이어는 건들지않고 입력, 출력만 건듦
+
+Param : 연산량(Output*node + bias) (ex : (h0 = W^0 + W1 + W2 + b) + (h1 = W^3 + W4 + W5 + b))
+
+# Total params: 31          -> 전체 param
+# Trainable params: 31      -> 학습가능한 param
+# Non-trainable params: 0   -> 학습불가한 param
+
+전이학습 모델은 hidden layer param제외한 입/출력 param만 Trainable하다.
+재훈련을해서 튜닝을하려면 Trainable param을 정한다.
+
+- model.predict 할때 가중치는 저장됨.

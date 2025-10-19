@@ -1,0 +1,218 @@
+★★★ 파이토치는 케라스와 달리 batch단위로 학습을 하려면 TensorDataset과 DataLoader를 활용해야한다. 케라스 fit, evaluate함수에서 내부적으로 제공하는 기능을 직접 구현해야한다.
+ - DataLoader의 데이터타입 : 텐서를 튜플형태로 감싼 Iter계열데이터타입(엄밀히말하면 완벽한 Iter는 아니라서 데이터를 출력해서보려면 iter로 감싸서 확인해야함)
+ - DataLoader없이 학습,평가,추론(예측)하면 기본적으로 통배치로 학습,평가,추론(예측)이 된다.
+ - batch_size(미니배치) 단위로 나누기때문에 loss도 전체의 평균으로 반환해야한다.
+ - DataLoader는 또한 배치단위로 작업하기때문에 메모리사용량에 있어서도 유리하다.
+ - 학습상에서의 평가지표(metrics)도 파이토치는 직접 구현해야한다.
+
+################################################################################################################################################################
+1. [torch 데이터셋 만들기]
+
+ #################### torch 데이터셋 만들기 ####################
+from torch.utils.data import TensorDataset  # x,y 합치기
+from torch.utils.data import DataLoader     # batch 정의
+
+#################### 1. x와 y를 합친다 ####################
+train_set = TensorDataset(x_train, y_train) # tuple 형태
+test_set = TensorDataset(x_test, y_test)
+print(train_set)                # <torch.utils.data.dataset.TensorDataset object at 0x000002396CBC5D00>
+print(type(train_set))          # <class 'torch.utils.data.dataset.TensorDataset'>
+print(len(train_set))           # 398
+print(type(train_set[0]))       # <class 'tuple'>
+print(type(train_set[0][0]))    # <class 'torch.Tensor'>
+
+print(train_set[0])
+# (tensor([ 0.2657,  1.5380,  0.2455,  0.1784,  0.4530, -0.1208,  0.4550,  0.4466,
+#         -0.5746,  0.2977,  0.9065,  0.6198,  0.6503,  0.5498,  1.1947, -0.0570,
+#          0.5188,  0.8896,  0.1216,  0.4410,  0.4590,  1.3009,  0.4148,  0.3013,
+#          1.4809, -0.1168,  0.6331,  0.5793, -0.3707,  0.6593], device='cuda:0'), tensor([0.], device='cuda:0'))
+print(train_set[0][0])  # 0번째 행의 x
+# tensor([ 0.2657,  1.5380,  0.2455,  0.1784,  0.4530, -0.1208,  0.4550,  0.4466,
+#         -0.5746,  0.2977,  0.9065,  0.6198,  0.6503,  0.5498,  1.1947, -0.0570,
+#          0.5188,  0.8896,  0.1216,  0.4410,  0.4590,  1.3009,  0.4148,  0.3013,
+#          1.4809, -0.1168,  0.6331,  0.5793, -0.3707,  0.6593], device='cuda:0')
+print(train_set[0][1])  # 0번째 행의 y
+# tensor([0.], device='cuda:0')
+
+#################### 2. batch를 정의한다. ####################
+train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)   # batch_size : 미니배치
+test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False)
+# test_loader에서 shuffle=False : 재현성보장 -> 학습과정 추적용이
+# train_loader에서 shuffle=True : 매 epoch마다 학습데이터를 섞어서 배치순서의존도를 없애고 과적합 피하기위함
+print(len(train_loader))        # 40
+print(train_loader)             # <torch.utils.data.dataloader.DataLoader object at 0x000001B2D7DC1CA0>
+# print(train_loader[0])        # TypeError: 'DataLoader' object is not subscriptable
+# print(train_loader[0][0])     # TypeError: 'DataLoader' object is not subscriptable
+
+print("=============================================================")
+#################### 이터레이터 데이터 확인하기 ####################
+# 1. for문으로 확인
+# 한번에 보기
+# for aaa in train_loader:
+#     print(aaa)        # 첫번째 배치출력 (batch_size만큼 x,y행 출력)
+#     break
+# 튜플 나눠서보기
+for x_batch, y_batch in train_loader:
+    print(x_batch)
+    print(y_batch)      # 첫번째 배치출력 (batch_size만큼 x,y행 출력)
+    break
+# [tensor([[ 2.8028e-01,  2.4812e+00,  1.9083e-01,  1.8701e-01, -9.2508e-01,
+#             ... 
+#          -1.0276e+00, -5.8231e-01, -7.6905e-01,  5.5657e-01, -1.2957e+00],
+#             ...
+#         [ 6.3618e-01,  9.7025e-01,  7.1193e-01,  5.4443e-01,  9.5542e-02,
+#             ...
+#           1.4189e+00,  2.1307e+00,  1.7002e+00,  3.1044e+00,  7.6444e-01]],
+#        device='cuda:0')
+# tensor([[0.],
+#         [1.],
+#         [0.],
+#         [0.],
+#         [1.],
+#         [0.],
+#         [1.],
+#         [0.],
+#         [0.],
+#         [1.]], device='cuda:0')]
+
+# 2. next() 사용
+bbb = iter(train_loader)
+# aaa = bbb.next()    # AttributeError: '_SingleProcessDataLoaderIter' object has no attribute 'next'
+aaa = next(bbb)
+print(aaa)            # 두번째 배치출력(위에서 한번출력 했으므로)
+# [tensor([[-0.2011,  0.3978, -0.1615, -0.2869,  0.3956,  0.4084,  0.2325,  0.1495,
+#             ...
+#           1.2634,  1.1262,  1.1233,  1.7157, -0.1256,  1.4191],
+#             ...
+#         [-0.4753, -0.6450, -0.4647, -0.5320,  1.4147,  0.0849, -0.3758, -0.4268,
+#             ...
+#           1.1328, -0.5192, -0.4148, -0.4840,  0.4317, -0.4756]],
+#        device='cuda:0'), tensor([[0.],
+#         [1.],
+#         [0.],
+#         [0.],
+#         [1.],
+#         [0.],
+#         [1.],
+#         [0.],
+#         [0.],
+#         [1.]], device='cuda:0')]
+################################################################################################################################################################
+2. [훈련부분 구현]
+
+def train(model, criterion, optimizer, loader):
+    # model.train()
+    
+    total_loss = 0
+    for x_batch, y_batch in loader:
+        optimizer.zero_grad()
+        
+        hypothesis = model(x_batch)
+        loss = criterion(hypothesis, y_batch)   # total_loss없이 loss만 쓰면 문제점: for문안에있어서 마지막 batch의 loss로 덮어씌워짐.
+        
+        loss.backward()
+        optimizer.step()
+        
+        total_loss += loss.item()
+        
+    return total_loss / len(loader)             # 모든 batch loss의 평균을 반환함
+
+epochs = epochs
+for epoch in range(1, epochs+1):
+    loss = train(model, criterion, optimizer, train_loader)
+    print('epochs: {}, loss: {}'.format(epoch, loss))
+################################################################################################################################################################
+3. [평가부분 구현]
+
+def evaluate(model, criterion, loader):
+    model.eval()
+    
+    total_loss = 0
+    with torch.no_grad():                       # no_grad는 for문 바깥에 사용하는걸 추천
+        for x_batch, y_batch in loader:
+            y_predict = model(x_batch)
+            loss2 = criterion(y_predict, y_batch)
+            total_loss += loss2.item()
+            
+    return total_loss / len(loader)             # 모든 batch loss의 평균을 반환함
+
+last_loss = evaluate(model, criterion, test_loader)
+################################################################################################################################################################
+4. [예측부분 구현] : 엄밀하게 추론하려면 eval과정과 동일한 조건(model.eval(), no_grad를 사용해야한다.)
+
+# 1. 모델을 반드시 '추론 모드'로 전환합니다.
+model.eval() 
+
+# 2. 모든 배치의 예측 결과를 담을 빈 리스트를 준비합니다.
+all_predictions = [] 
+
+# 3. 기울기 계산을 비활성화하여 메모리 사용량과 계산 속도를 최적화합니다.
+with torch.no_grad():
+    # 4. test_loader에서 데이터를 배치 단위로 꺼냅니다.
+    # test_loader는 (x, y) 쌍을 반환하므로, 예측에는 x만 필요합니다.
+    for x_batch, y_batch_dummy in test_loader:
+        
+        # 5. 현재 배치(x_batch)에 대한 예측을 수행합니다.
+        y_predict_batch = model(x_batch)
+        
+        # 6. 예측 결과를 CPU로 옮긴 후 리스트에 추가합니다.
+        # .detach()는 no_grad() 안에서는 생략 가능합니다.
+        all_predictions.append(y_predict_batch.cpu())       # 학습이 전부끝났기때문에 메모리효율을 위해 cpu로 옮겨서 리스트생성. [텐서1, 텐서2, 텐서3, ...]
+
+# 7. 리스트에 담긴 모든 배치별 예측 텐서들을 torch.cat을 이용해 하나의 큰 텐서로 합칩니다.
+y_predict = torch.cat(all_predictions, dim=0).numpy()       # torch.cat : 행단위(dim=0)로 텐서1 + 텐서2 + 텐서3 + ... 합한 후 numpy로 변환
+
+# 8. 실제 정답값도 numpy 배열로 준비합니다.
+y_true = y_test.detach().cpu().numpy()
+################################################################################################################################################################
+4.1 [참고] : DataLoader없이 예측하는코드
+
+# target 생성
+y_predict = model(x_test)
+print(y_predict.size())             # torch.Size([171, 1])
+
+# 텐서를 넘파이배열로 변환(output, target)
+y_predict = y_predict.detach().cpu().numpy()
+y_true = y_test.detach().cpu().numpy()
+################################################################################################################################################################
+5. [커스텀학습평가지표(acc)부분 구현]
+
+def train(model, criterion, optimizer, loader):
+    # model.train()  # Dropout, BatchNorm 등의 레이어를 활성화
+    epoch_loss = 0
+    epoch_acc = 0
+    
+    for x_batch, y_batch in loader:
+        x_batch, y_batch = x_batch.to(DEVICE), y_batch.to(DEVICE)
+        
+        optimizer.zero_grad()   # 기울기 0으로 초기화
+        
+        hypothesis = model(x_batch)
+        loss = criterion(hypothesis, y_batch)
+        
+        loss.backward()         # 기울기(gradient)값까지만 계산 : ∂L/∂w
+        optimizer.step()        # 가중치갱신 : w = w - lr * ∂L/∂w
+        
+        y_predict = torch.argmax(hypothesis, 1)
+        acc = (y_predict == y_batch).float().mean()
+        """
+        [acc 작동순서]
+        1. (y_predict == y_batch)
+        tensor([True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True], device='cuda:0')
+        
+        2. (y_predict == y_batch).float()
+        tensor([1., 1., 1., 1., 1., 1., 1., 1., 0., 1., 1., 1., 1., 1., 1., 1.], device='cuda:0')
+        
+        3. (y_predict == y_batch).float().mean()
+        1 + 1 + ... + 0 + ... + 1 = 15.0 / 16 = 0.9375
+        """
+        
+        epoch_loss += loss.item()
+        epoch_acc += acc
+        
+    return epoch_loss/len(loader), epoch_acc/len(loader)
+
+EPOCH = 100
+for epoch in range(1, EPOCH+1):
+    loss, acc = train(model, criterion, optimizer, train_loader)
+    print(f'epoch : {epoch}, loss : {loss:.4f}, acc : {acc:.3f}')

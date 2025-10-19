@@ -1,0 +1,5 @@
+live server : 새로고침하면 바로 반영됨
+console.clear() : 콘솔창 깨끗이하기
+
+NaN : 수치 데이터에서 유효하지 않은 결과
+결측치 : 누락된 결과. NA, NULL, NaN등 다양한 형태로 표현

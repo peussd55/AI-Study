@@ -1,0 +1,4 @@
+학습데이터 이동 순서 : 보조기억장치 -> cpu ram -> gpu 메모리
+
+[Pytorch] Dataloader, [keras] Generator : "보조기억장치 → batch만큼 cpu → batch만큼 gpu"
+Dataloader나 Generator없을시 : "보조기억장치 → 전체사이즈 cpu 적재 → batch만큼 gpu"

@@ -1,0 +1,4 @@
+과적합방지방법
+
+1순위 : 많은 데이터(데이터 증폭)
+2순위 : dropout, batch정규화, earystopping활용 등

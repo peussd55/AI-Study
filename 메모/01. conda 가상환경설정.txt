@@ -1,0 +1,66 @@
+0. 콘다 설치 경로
+C:\Users\HI-806\anaconda3
+
+1. 콘다 가상환경 생성 (tf290라는 이름으로 파이썬 3.9.7로 설치)
+conda create -n tf293 python==3.9.7
+
+2. 콘다 가상환경 리스트 확인
+conda env list
+
+3. 가상환경 활성화
+activate tf293
+
+4. 필요한 패키지 설치
+pip install tensorflow==2.9.3 numpy==1.23.0 scikit-learn==1.1.3 matplotlib==3.9.4 pandas==2.2.3
+
+5. 콘다 가상환경 생성(아나콘다 기본 패키지까지 함께 설치)
+- conda create -n tf274 python==3.9.7 anaconda
+- pip install tensorflow==2.7.4
+
+5. 특정 패키지 버전확인
+pip show numpy tensorflow
+
+6. 가상환경 비활성화
+conda deactivate
+
+7. pip 설치 패키지 출력
+pip list
+
+8. 텐서란?
+행렬의 집합, 3차원 이상 행렬의 집합
+(100x100) x 3 => (3차원)텐서
+(100x100) x 3 x 3 => 4차원 텐서
+(100x100) x 3 x 3 x 3 => 5차원 텐서
+
+9. tensorflow 버전확인
+tensorflow.__version__
+
+10. vscode 단축키 : 화면 확대/축소
+Ctrl +/-
+
+11. vscode 단축키 : Line 복사 -> 붙여넣기
+Ctrl + c -> Ctrl + v
+
+12. vscode 단축키 : Line 삭제
+Shift + Deltete
+
+13. vscode 단축키 : Line 주석
+Ctrl + /
+
+14. vscode 단축키 : 코드 터미널 띄우고 실행
+F5 또는 Ctrl + F5
+
+15. vscode 단축키 : 인터프리터 선택
+Ctrl + Shfit + P -> Select interpreter
+
+16. vscode 단축키 : 해당 줄 삭제
+Shift + Delete
+
+16. vscode 단축키 : 터미널창 띄우기
+Ctrl + `
+
+16. vscode 설치 플러그인 :
+- 파이썬 관련
+- rainbow csv
+- Excel Viewer(csv파일열고 오른쪽 위에 Open Preview 누르면 테이블 형태로 나옴)
+- liver server
