@@ -1,7 +1,0 @@
-1. fastapi / uvicorn 설치
-2. 터미널 Command Prompt에서 fastapi 실행파일있는 위치로 이동
-3. uvicorn으로 서버 실행 : uvicorn 파일명(.py제외):app --reload
-3.1 reload 옵션 : 변경사항 바로 반영
-4. 특정포트옵션 : uvicorn f02_main_path:app --reload --port 8888 
-- : 단축어 (모든 옵션이 단축어 지원하는 것은 아님)
--- : 풀네임어

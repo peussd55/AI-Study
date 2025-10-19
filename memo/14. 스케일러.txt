@@ -1,9 +1,0 @@
-1. MinMaxScaler : 0~1 범위로 스케일링(0과 1은 무조건 포함)
-    - 이상치에 약함
-2. StandardScaler : 표준정규분포화(Z-Score)
-    - MinMax나 MaxAbs보다는 덜 하지만 이상치에 영향을 받음(평균이 한 쪽으로 치우침)
-3. MaxAbsScaler : -1~1 범위로 스케일링(1 또는 -1은 무조건 포함)
-    - 이상치에 약함
-    - 쓰는 이유 : 희소행렬에서 0을 보존할 수있음(MinMaxScaler는 0이 소실되는경우가 있을 수있음 -> 저장해야할 메모리가 늘어남. 연산량이 폭증함.)
-4. RobustScaler : x-median/IQR(=Q3-Q1)
-    - 이상치에 제일 강함

@@ -1,6 +1,0 @@
-                                    회귀 / 이진분류 / 다중분류
-                                    
-원핫                            x   /   해도되고안해도되고  /   해야함
-마지막layer노드의 갯수          y와 동일    /   1   /   원핫한 y의 라벨의 갯수
-마지막activateion함수           디폴트(linear)  /     sigmoid   /   softmax
-loss                        mae,mse,r2 등등     /   binary_crossentropy     /   categorical_crossentropy
