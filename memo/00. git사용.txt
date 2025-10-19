@@ -1,0 +1,48 @@
+◎ (1) 로컬에 깃 설정 
+# Git 설치
+sudo apt update && sudo apt install -y git
+
+# 사용자 정보 (커밋 서명에 들어감)
+git config --global user.name  "홍길동"
+git config --global user.email "you@example.com"
+
+# 추천: 기본 브랜치명 main, CRLF 이슈 예방, 퍼미션 변경 무시(WSL 편의)
+git config --global init.defaultBranch main
+git config --global core.autocrlf input
+git config --global core.filemode false
+
+◎ (2) 프로젝트 루트 폴더로 이동
+
+◎ (3) git 초기화
+# 깃 저장소 초기화
+git init
+git status
+
+◎ (4) .gitignore 와 .gitattributes 생성
+
+◎ (5) 초기 커밋
+git add .
+git commit -m "chore: initial commit (repo setup: .gitignore, .gitattributes)"
+
+◎ (6) 원격저장소생성(github)
+# README / .gitignore / LICENSE 아무것도 체크하지말기
+
+◎ (7) 로컬저장소를 원격저장소에 연결 (pasword 입력하라고 뜨면 access token 입력)
+git remote add origin https://github.com/peussd55/Law-AI-Dev.git
+git remote -v
+
+[참고] 일반적인 access token 허용범위
+☑ repo
+☑ workflow
+☑ read:org
+
+◎ (6) 원격저장소에 push
+# 혹시 브랜치가 main이 아니면 강제로 변경
+git branch -M main
+git branch -vv
+
+# 최초 푸시 (업스트림 설정)
+git push -u origin main
+
+
+

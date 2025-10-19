@@ -1,0 +1,79 @@
+[개요]
+1. ssh 키 생성 : 개인키, 퍼블릭키 로컬 컴퓨터에 저장됨
+2. 퍼블릭키를 클라우드서버인스턴스에 등록함
+3. 해당 퍼블릭키를 복사해서 로컬컴퓨터에서 ssh 접속
+4. 키 생성한 로컬컴퓨터여야만 퍼블릭키 개인키 매칭되서 접속가능함. 즉, ssh 키 생성한 로컬컴퓨터에서만 접속가능
+
+[ssh키 생성후 runpod 인스턴스 배포]
+1. 터미널이나 cmd 실행
+2. ssh-keygen
+3. 실행 로그에 뜨는 키 생성경로로 이동
+4. .pub 파일 메모장으로 열기
+5. 해당컴퓨터에서 생성된 퍼블릭 키 복사
+6. runpod console - settings - SSH Public Keys 에 추가
+7. pods - deploy (기본 템플릿(초기 배포환경) 외 템플릿을 커스텀할수있다. -> 도커 이미지로도가능)
+8. 배포된 인스턴스의 connect 버튼 클릭 - SSH - 터미널이나 vscode에서 접속
+9. 사용하지 않을땐 중지 - stop 버튼 - 삭제까지하려면 terminate까지 진행
+10. 새로운 ssh키(새 컴퓨터)로 접속해야하만 인스턴스 stop 후 settings에서 Keys 업데이트 후 재실행
+
+[vscode에서 접속]
+1. 익스텐션에서 Remote - SSH 설치
+2. 왼쪽 패널에 REMOTE 메뉴 클릭
+3. SSH에서 + 버튼 클릭
+4. runpod에서 배포된 인스턴스의 connect 버튼 클릭 - SSH over exposed TCP 복사(터미널로 접속하려면 SSH복사 후 터미널에서 붙여넣기 엔터)
+5. vscode 돌아와서 박스에 붙여넣기 - 엔터
+6. 맨위에 뜨는 xx.xx.xx.xx/.ssh/config 클릭
+7. SSH 클릭 - 맨위 숫자로만 구성된 서버주소이름 옆에있는 화살표 클릭 - continue클릭
+8. vscode 좌측하단에 SSH:xx.xx.xx.xx 형태의 주소로 접속잘됐는지 확인
+9. runpod의 인스턴스는 기본적으로 도커형태로 배포
+ 9.1 기본디스크경로 : /workspace (인스턴스 중지할때도 /workspace에 없는 데이터는 전부 날라감)
+10. 나중에 다시 접속할때 vscode 좌측하단 클릭 - connect to Host - 주소선택
+11. 오류등으로 지우고 주소 재생성하려면 ssh 설정버튼 누르고 나오는 내용 전부삭제
+12. remote 서버 새 vscode 창으로 열려면 마우스 우클릭
+
+[기타]
+1. pod : 상시 기동상태. 시간당 요금이 고정적으로 청구됨
+2. serverless : 요청이 들어올때만 자원할당 요금 청구됨
+3. 인스턴스 stop상태라도 고정요금이 계속 빠져나감.
+4. 네트워크볼륨(영구스토리지)생성시 인스턴스랑 같은 region으로 생성해야 pod서버에 마운트 가능
+   -> 콘솔에서 인스턴스 생성할때 Global Networking 옵션키면 네트워크볼륨생성가능한 region 서버로 필터됨.
+5. 인스턴스생성되고나면 edit에서 할당 gpu갯수 조절가능
+6. 주의나 경고설명 잘봐야한다. 예를들어 deploy하려할때 B200은 파이토치 2.8만 사용가능하다는 설명등이 뜸
+  -> 같은 gpu라도 region에 따라 세부옵션(vCPU갯수 등)이 다르다. 테스트 꼼꼼히 일거볼 것.
+7. edit pod에서 디스크옵션등을 설정할수있다.
+8. 스토리지를 제공하는 각 데이터센터(리전)에서 현재 사용가능한 GPU가 각각 다르다. 콘솔에서 클릭하면서 확인해봐야한다.
+9. 기본적으로 인스턴스나 스토리지나 기본 가동요금이 빠져나간다. 스토리지는 용량에 따라 차등된다.
+10. edit pod
+  - Container Disk : 임시디스크. 인스턴스 중지되면 모두 사라짐
+  - Volume Disk : 인스턴스가 삭제되지 않는한 남아있는 디스크. 기본적으로 /workspace에 마운트됨
+11. 네트워크 볼륨은 pod인스턴스 생성될때만 붙일수있다. 이미 안붙이고 생성했으면 삭제하고 다시만들어함.
+  -> Storage 메뉴에서 볼륨 먼서 생성하고 Pods 메뉴에서 인스턴스 고를때 Add a Network Volume 선택해야함.
+12. 기본적으로 pip나 conda로 설치한 패키지는 /workspace에 설치되지않기때문에 인스턴스 삭제되면 다날아감. -> 배포도커환경 Template만들기
+13. 기본 Template에서 deploy직전에 edit Template누르고 Start Command에 뭐라도 입력하면 엔트리포인트(./start.sh)가 무시되어서(override) 기본옵션으로 설치될 패키지들이 하나도 설치안된다.
+ -> 커스텀 Template에 필요한것만 세팅하거나 Start Command 끝에 start.sh를 넣어서 실행한다.
+ -> 작성법 공식문서참조(https://docs.runpod.io/api-reference/templates/POST/templates)
+ -> ex) bash -c "apt-get update && apt-get install -y vim nano curl git && /start.sh"
+14. 어떤 리전에서는 인스턴스 중지가 없고 Terminate만 있는 경우도있다.
+15. 네트워크볼륨 붙여서 인스턴스생성하면 stop못하고 terminate만 해야함.
+16. 디스크나 네트워크볼륨 유지비용은 실제파일 용량이 아니라 세팅된 용량 크기만큼 청구된다.
+  -> 인스턴스는 고정유지비용이 상당히쌔므로 학습추론할때만 생성하고 작업 다끝나면 삭제한다.
+  -> 네트워크는 상대적으로 저렴하므로 사용안할땐 적은용량(50GB~100GB)을 유지하고 가변적으로 확장(축소는 안됨)가능하므로 학습도중에 필요하면 늘린다.
+17. B200은 토치 2.8이상만 사용가능
+18. 비용때문에 인스턴스는 매번 삭제하므로 패키지설치 자동화나 커스텀이미지는 항시 세팅해두는게 좋다.
+
+[패키지설치 자동화]
+1. 네트워크볼륨 상시유지
+2. 네트워크볼륨 기본디렉토리(/workspace)에 패키지설치 자동화 파일(requirements.txt 등)저장 
+3. 인스턴스 생성후 pip freeze > requirements.txt 나 pip install -r requirements.txt 실행
+ 3.1 또는 인스턴스 생성할때 Start Command에 pip install -r requirements.txt && python app.py 형식으로 실행
+4. start.sh 또한 내가 만들고 override해서 디폴트 엔트리포인트 start.sh대신 사용해도된다.
+5. Docker 커스텀 이미지 or Runpod Custom Template 방법도 존재
+ 5.1 도커허브에 이미지 배포하고 인스턴스 deploy할때 불러오기
+  ->  starth.sh안에 도커이미지를 이용해 컨테이너 생성하는 방식은 이미 Template로 가장먼저 생성되는 생성되는 컨테이너안에 또 컨테이너가 들어가는 방식이라 비효율적
+
+[인스턴스 배포상세] (작성중...)
+1. runpod deploy할때 edit Template - Start Command에서 
+ - bash -c "apt-get update && apt-get install -y vim nano curl git && /start.sh" 입력
+2. git이 설치됐으므로 소스코드 받아온다.
+ - git clone https://github.com/peussd55/AI-Study.git
+3. ./install.sh 실행해서 필요한 것 설치한다. (conda 패키지설치, pip패키지설치)

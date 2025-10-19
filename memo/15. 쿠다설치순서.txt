@@ -1,0 +1,19 @@
+0.0 gpu 드라이버 버전확인 : cmd 창에서 nvidia-smi : 여기서 나오는 CUDA Version은 실제로 설치된 버전이 아니라 해당 Driver Version에 최적화된 쿠다버전을 표기한 것일뿐이다.
+
+[쿠다설치] : cuda_11.4.4_472.50_windows.exe
+1.0 cuda_11.4.4_472.50_windows.exe 더블클릭
+1.1 OK
+1.2 라이선스계약에서 사용자 정의 설치옵션 - CUDA - Visual Studio Integration 체크 해제
+1.2 Driver components에서 현재버전이 더 높으면 체크 해제
+1.3 다음 - 다음 - 닫기
+1.4 쿠다 설치 후 버전확인 : cmd창에서 nvcc -V
+
+[cuDNN설치] : cudnn-11.4-windows-x64-v8.2.4.15.zip
+2.0 쿠다설치 경로 : C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\~ 로 들어가기
+2.1 cuDNN압축해제파일을 위의 경로에 덮어쓰기
+
+(중요)텐서플로우 gpu버전을 별도로 깔아야 텐서플로우에서 gpu인식을 할 수있다
+
+[cuda 사용량 확인] : 작업관리자 - GPU탭 - Copy등등 아무거나 내려서 CUDA 선택
+
+(중요) 매트릭스 데이터를 학습할때는 cpu가 더 빠른 경우가 많다.

@@ -1,0 +1,212 @@
+http://127.0.0.1:8000/
+uvicorn f02_main_path:app --reload --port=8888
+
+
+지도학습(Supervised Learning)
+비지도 학습(Unsupervised Learning)
+
+이진분류
+activation ='sigmoid'
+loss='binary_crossentropy'
+
+다중분류 
+activation = 'softmax'
+loss='categorical_crossentropy'
+
+type of Scaler
+
+StandardScaler	평균 0, 표준편차 1로 변환 (Z-score)	딥러닝, 선형 모델
+MinMaxScaler	0~1 범위로 압축	딥러닝, 이미지 데이터
+RobustScaler	중앙값 기반 → 이상치 영향 적음	이상치 많은 데이터
+MaxAbsScaler	절대값 기준 -1 ~ 1로 변환	희소 행렬 (Sparse Data)
+
+
+3차원일 경우 
+예 (10000,10,3,1) 천개의 데이터가 10, 3에 있다 
+이럴경우 input_shape(10,3)
+
+Conv2D 인자 값 설명
+파라미터	         설명	                         예시 / 기본값
+filters	            커널의 개수 → 특징 맵의 개수	32 →  32개의 특징 추출
+kernel_size	        커널(필터)의 크기	(3, 3) → 3×3 필터
+strides	            커널이 움직이는 간격	(1, 1) → 한 칸씩 이동
+padding	            테두리 처리 방식	"valid" (잘라냄), "same" (사이즈 유지)
+activation	        활성화 함수	"relu" 등
+use_bias	        바이어스를 쓸지 여부	기본: True
+kernel_initializer	필터 값 초기화 방법	"glorot_uniform" 기본
+bias_initializer	바이어스 초기화 방법	"zeros" 기본
+dilation_rate	    커널 간격 확장 (구멍 뚫는 필터)	(1,1) 기본
+groups	            필터 그룹 (잘 안 씀)	1 기본
+kernel_regularizer	과적합 방지 (L1/L2)	선택 사항
+bias_regularizer	바이어스에 정규화 적용	선택 사항
+activity_regularizer	출력값 정규화	거의 안 씀
+kernel_constraint	 필터 값 제한 (예: 최대 크기 제한)	거의 안 씀
+bias_constraint	     바이어스 제한	거의 안 씀
+
+1. 데이터 타입 확인 깜박함.
+2. 소스가 기억이 안남.
+3. 잘 이해를 못함. shape쪽 잘 모르겠다 보다는 .왜 오류가 계속나는지 모르겠음.
+4. 스케일러 스펠링 
+5. 파이썬 버전 형태
+6. 원핫인코더
+7. 로스값 스페링 이진법, 다중
+
+
+MaxPooling 인자 값
+인자	     역할	예시
+pool_size	 풀링 창 크기	   (2, 2)
+strides	     창 이동 크기	  (2, 2)
+padding	     경계 처리 방식	  'same', 'valid'
+data_format	  채널 위치	      'channels_last'
+
+
+1. astype('float32') 하는 이유
+원래 CIFAR-100 이미지 데이터는 uint8 타입이에요. (0부터 255까지 정수)
+신경망 모델은 보통 실수(float32) 타입의 데이터를 입력으로 받아 학습합니다.
+따라서, astype('float32')를 통해 데이터 타입을 float32로 바꿔줘야 모델이 숫자를 제대로 처리할 수 있어요.
+
+1. boston
+2. california
+3. diabetes
+4. dacon_ddarung
+5. kaggle_bike
+
+6. cancer
+7. dacon_당뇨병
+8. kaggle_bank
+9. wine
+10.fetch_covtpye
+
+11. digits
+12. kaggle-StandardScaler
+13. kaggle-otto
+
+mminst
+fashion_mnist
+
+
+인자	            타입	기본값	설명
+directory	        str	—	이미지 폴더 경로. 하위 폴더 이름이 클래스 이름으로 사용됨.
+target_size	        tuple	(256, 256)	모든 이미지를 이 크기로 resize
+color_mode	        str	'rgb'	'rgb', 'grayscale', 'rgba' 중 선택
+classes	list	    None	사용할 클래스 이름 목록. 지정하지 않으면 폴더명 기준 자동 라벨링
+class_mode	        str	'categorical'	'categorical', 'binary', 'sparse', 'input', None
+batch_size	        int	32	한 배치에 반환할 이미지 수
+shuffle             bool	True	데이터를 섞을지 여부
+seed	            int	None	셔플 시 랜덤 시드 고정 용도
+save_to_dir	        str	None	이미지가 전처리된 후 저장할 경로 (디버깅 용도)
+save_prefix	        str	''	저장되는 이미지의 이름 앞에 붙는 접두어
+save_format	        str	'png'	저장될 이미지 포맷 ('png', 'jpeg' 등)
+follow_links	    bool	False	심볼릭 링크를 따라갈지 여부
+subset	            str	None	'training' 또는 'validation', validation_split을 설정했을 때 사용
+interpolation	    str	'nearest'	이미지 리사이즈 시 보간(interpolation) 방법: 'nearest', 'bilinear', 'bicubic' 등
+
+---------------------------------------------RNN-----------------------------------------------
+
+딥러닝 모델, 특히 LSTM, GRU 같은 RNN 모델이나 1D CNN 모델은
+입력 데이터를 (샘플 수, 시간축 길이, 피처 수) 즉, 3차원 형태로 받습니다.
+
+2차원 시계열 데이터는 (샘플, 시간) 구조.
+딥러닝 시계열 모델은 (샘플, 시간, 피처) 형태를 요구.
+따라서 3차원으로 변경 시 피처 차원이 추가됨.
+피처를 추가하는 것은 데이터의 특성(변수 수)을 명확히 표현하고, 모델이 시점별 여러 변수를 인식하도록 하기 위함.
+
+RNN은 시간 축(timesteps)을 따라 순차적으로 데이터를 처리합니다.
+각 시점(time step)에서 입력은 (batch_size, features) 즉 2차원 형태입니다.
+쉽게 말해, 전체 3차원 입력을 시간 축 기준으로 잘라서 각 시점별로 2차원 데이터를 반복 처리하는 거죠.
+
+입력 데이터는 (배치, 시퀀스, 피처) 3차원 → 딥러닝 프레임워크에 입력.
+RNN 내부 계산은 시점별로 (배치, 피처) 2차원 단위 처리 → 시퀀스를 따라 반복 수행.
+그래서 겉보기에는 3차원 입력을 받지만, 실제 시점별로 2차원 입력을 처리하는 셈.
+
+
+* GridSearchCV
+
+주요 파라미터
+estimator: 사용할 머신러닝 모델(예: RandomForestClassifier, SVC, LogisticRegression 등).
+param_grid: 하이퍼파라미터 값들의 딕셔너리. 하이퍼파라미터 이름을 키로, 후보 값들을 리스트로 제공합니다.
+cv: 교차 검증을 위한 폴드 수. 예를 들어, cv=5는 5-겹 교차 검증을 의미합니다.
+n_jobs: 사용할 CPU 코어의 수. -1이면 모든 코어를 사용합니다.
+verbose: 출력의 자세함 정도를 설정합니다. verbose=1이면 간단한 진행 상황을 출력합니다.
+scoring: 모델 성능을 평가할 기준을 설정합니다. 예를 들어, accuracy, f1, roc_auc 등을 사용할 수 있습니다.
+refit: 최적의 하이퍼파라미터 조합으로 모델을 다시 학습할지 여부. True로 설정하면 최적 모델을 다시 학습합니다.
+
+
+* HalvingRandomSearchCV
+
+주요 파라미터
+estimator: 모델을 지정합니다. 예를 들어, RandomForestClassifier나 SVC와 같은 머신러닝 모델입니다.
+param_distributions: 하이퍼파라미터 값의 범위입니다. GridSearchCV에서의 param_grid와 동일합니다. 하지만 HalvingRandomSearchCV는 랜덤 샘플링을 사용하므로, 보다 넓은 범위에서 샘플링합니다.
+n_iter: 하이퍼파라미터 샘플링 횟수입니다. 더 많은 샘플을 시도하려면 n_iter를 증가시킬 수 있습니다.
+factor: 자원 할당 배수입니다. 예를 들어, factor=2이면 성능이 높은 모델에 대해 두 배의 자원을 할당하고, 성능이 낮은 모델은 제외합니다. 일반적으로 2 이상의 값을 사용합니다.
+cv: 교차 검증을 위한 폴드 수입니다.
+n_jobs: 병렬로 실행할 작업의 수입니다. -1로 설정하면 가능한 모든 CPU 코어를 사용합니다.
+verbose: 출력의 자세함 정도를 설정합니다. verbose=1은 진행 상황을 간단히 출력합니다.
+
+
+컴파일러 최적화에서 "공격적인 제거"는 **죽은 코드 제거(dead code elimination)**를 의미할 수 있습니다.
+
+* RandomSerachCV
+주요 파라미터
+
+estimator: 하이퍼파라미터 튜닝을 수행할 모델입니다. 예를 들어, RandomForestClassifier, SVC, LogisticRegression 등을 사용할 수 있습니다.
+param_distributions: 탐색할 하이퍼파라미터 공간을 정의하는 딕셔너리입니다. 각 하이퍼파라미터에 대해 배열, 리스트, 분포 등을 지정할 수 있습니다.
+randint(low, high)와 같은 확률적 분포를 사용하여 하이퍼파라미터를 무작위로 샘플링할 수 있습니다.
+n_iter: 시도할 랜덤 조합의 수입니다. 더 많은 조합을 시도하면 더 정교한 최적화가 가능하지만, 시간이 오래 걸릴 수 있습니다.
+cv: 교차 검증을 위한 폴드 수입니다. 예를 들어, cv=5는 5-겹 교차 검증을 의미합니다.
+n_jobs: 사용할 CPU 코어의 수를 지정합니다. -1로 설정하면 가능한 모든 코어를 사용합니다.
+verbose: 진행 상황을 출력하는 정도를 설정합니다. verbose=1로 설정하면 간단한 정보를 출력합니다.
+
+* HalvingRandomSearchCV 실행시 나오는 로그 해석 내용
+
+iter: 2
+n_candidates: 5
+n_resources: 450
+Fitting 5 folds for each of 5 candidates, totalling 25 fits
+
+해석 내용
+
+iter: 2:
+3번째 반복(iteration)입니다. HalvingRandomSearchCV 또는 HalvingGridSearchCV는 각 반복에서 후보 모델들을 점차적으로 줄여가며 학습을 진행합니다. iter: 0에서 시작해 점차 후보를 축소한 결과, 지금은 3번째 반복 중입니다.
+
+n_candidates: 5:
+현재 반복에서 평가할 후보 모델의 수가 5개라는 의미입니다. 첫 번째 반복에서는 42개 정도의 후보가 있었고, 두 번째 반복에서는 9개였고, 지금은 그 중 성능이 좋은 5개 후보가 남았습니다.
+
+n_resources: 450:
+각 후보 모델이 사용하는 훈련 데이터의 샘플 수가 450개라는 의미입니다. 즉, 현재 5개 후보 모델이 각각 450개의 샘플로 훈련됩니다. 훈련 샘플 수는 이전 반복에서 설정한 min_resources와 factor 값에 의해 결정되며, 각 후보 모델이 사용할 데이터 양이 점차적으로 증가합니다.
+
+Fitting 5 folds for each of 5 candidates, totalling 25 fits:
+5-fold cross-validation을 사용하여 모델을 평가합니다. 즉, 각 후보 모델을 **5번의 교차 검증(fold)**으로 평가하고 있다는 의미입니다.
+총 5개의 후보 모델에 대해 5-fold cross-validation을 진행하므로, 총 25번의 훈련이 수행된다는 뜻입니다 (5 후보 * 5-fold = 25번).
+
+
+
+* BayesianOptimization
+
+Bayesian Optimization(베이지안 최적화)은 하이퍼파라미터 튜닝을 위한 고급 기법 중 하나로, 
+GridSearchCV나 RandomizedSearchCV보다 더 적은 횟수의 탐색으로 더 좋은 결과를 찾기 위한 방법입니다.
+
+Bayesian Optimization은 **확률 모델(보통 Gaussian Process)**을 이용해서 다음에 탐색할 가장 좋은 하이퍼파라미터 조합을 똑똑하게 예측하면서 탐색하는 방법입니다.
+
+기존 방법
+
+GridSearch: 모든 조합 다 돌림 → 비효율적
+RandomSearch: 랜덤하게 돌림 → 운에 의존
+
+Bayesian Optimization
+
+이전 탐색 결과를 학습해서 다음 탐색 위치를 똑똑하게 선택
+효율적으로 좋은 하이퍼파라미터를 찾음
+탐색하면서 모델을 계속 개선
+
+f : 최적화할 대상 함수입니다. 하이퍼파라미터를 입력으로 받고, 성능 점수를 반환하는 함수여야 합니다.
+pbounds:	탐색할 하이퍼파라미터의 범위를 딕셔너리 형태로 정의합니다. 예: {'max_depth': (3, 10), 'learning_rate': (0.01, 0.3)}
+verbose: 로그 출력 레벨입니다.
+- 0: 출력 없음
+- 1: 최소 출력
+- 2: 상세 출력
+random_state: 랜덤 시드 설정입니다. 재현 가능한 결과를 원할 때 사용합니다.
+allow_duplicate_points: 동일한 하이퍼파라미터 조합을 반복 허용할지 여부. 기본은 False입니다.
+
+
+# 불균형 데이터일때, f1_score를 smote를 생각을 해야 한다.

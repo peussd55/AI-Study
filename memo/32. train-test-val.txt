@@ -1,0 +1,8 @@
+학습방식 3가지
+
+1. train(validation) - test 분리 : 전체 데이터에서 test데이터 분리
+
+2. 전체데이터 K-Fold cross-validation : 전체데이터에서 n등분 한 후 교차 검증(전체데이터에서 test데이터가 번갈아가며 선택됨)
+
+3. 학습데이터 K-Fold cross-validation : 학습데이터에서 n등분 한 후 교차 검증(학습데이터에서 validation데이터가 번갈아가며 선택됨)
+-> 2번 방식에 비하면 데이터소실을 조금 더 줄일 수있고 훈련에 영향없는 validation을 교차검증하기때문에 과적합위험도 좀 더 낮다.
